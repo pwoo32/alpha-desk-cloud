@@ -20,7 +20,7 @@ BLOB = "rh_token.enc"
 def _env():
     """git over SSH with the deploy key from $STATE_DEPLOY_KEY (written to a 0600 temp file once per process)."""
     env = dict(os.environ)
-    key = os.environ.get("STATE_DEPLOY_KEY", "").strip()
+    key = os.environ.get("STATE_DEPLOY_KEY", "").replace("\r", "").strip()
     if key:
         kf = Path(os.environ.get("RUNNER_TEMP", "/tmp")) / "state_deploy_key"
         if not kf.exists():
