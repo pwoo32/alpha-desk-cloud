@@ -1,0 +1,64 @@
+# SPY 0DTE market-data collector. Read-only on Robinhood: the client refuses anything but GET (plus the OAuth refresh),
+# and there is no order code in this repository. A hosted job may run at most 6 hours, so the day is two jobs.
+name: collect
+on:
+  schedule:
+    - cron: "0 9 * * 1-5"       # starts 09:00 ET and waits for the open
+      timezone: "America/New_York"
+    - cron: "20 9 * * 1-5"      # back-up start (exits at once if the day already started)
+      timezone: "America/New_York"
+  workflow_dispatch:
+    inputs:
+      part:
+        description: "day (am then pm), capture (after-close capture now), selftest"
+        type: choice
+        options: [day, capture, selftest]
+        default: day
+permissions:
+  contents: write
+concurrency:            # one Robinhood session at a time: the refresh token rotates
+  group: robinhood
+  cancel-in-progress: false
+env:
+  RH_TOKEN_KEY: ${{ secrets.RH_TOKEN_KEY }}
+  COLLECTOR_STATE: "1"
+  PYTHONUNBUFFERED: "1"
+jobs:
+  am:
+    if: github.event_name == 'schedule' || inputs.part == 'day'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    outputs:
+      market_open: ${{ steps.run.outputs.market_open }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q requests cryptography
+      - run: python collector/state.py pull
+      - id: run
+        run: python collector/collect.py --part am
+  pm:
+    needs: am
+    if: always() && needs.am.outputs.market_open == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q requests cryptography
+      - run: python collector/state.py pull
+      - run: python collector/collect.py --part pm
+  manual:
+    if: github.event_name == 'workflow_dispatch' && inputs.part != 'day'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q requests cryptography
+      - run: python collector/state.py pull
+      - run: |
+          if [ "${{ inputs.part }}" = selftest ]; then python collector/rh.py selftest; else python collector/collect.py --part capture; fi
