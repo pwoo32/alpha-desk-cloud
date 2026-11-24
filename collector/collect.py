@@ -192,8 +192,8 @@ def capture(rh, D):
                 used[iv] = used.get(iv, 0) + 1
                 for b in on_day(bars, day):
                     rows[(i["strike"], i["type"], iv, b["ts"])] = dict(day=day, strike=f"{i['strike']:g}", type=i["type"], interval=iv, ts=b["ts"],
-                                                                       open=b["open"], high=b["high"], low=b["low"], close=b["close"], interpolated=int(b["interpolated"]))
-        n = write_csv(out / "option_bars.csv.gz", ["day", "strike", "type", "interval", "ts", "open", "high", "low", "close", "interpolated"], [rows[k] for k in sorted(rows)])
+                                                                       open=b["open"], high=b["high"], low=b["low"], close=b["close"], volume=b.get("volume", ""), interpolated=int(b["interpolated"]))
+        n = write_csv(out / "option_bars.csv.gz", ["day", "strike", "type", "interval", "ts", "open", "high", "low", "close", "volume", "interpolated"], [rows[k] for k in sorted(rows)])
         return f"{n} rows ({used})"
     step("option_bars", option_bars)
 
