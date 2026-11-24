@@ -10,7 +10,7 @@ Read-only: the client refuses every request except GET and the OAuth token refre
 | close + 12 min | 1-min and 5-min bars of every 0DTE contract (`option_bars.csv.gz`), end-of-day quotes (`quotes.csv`), QQQ/IWM/VIX/SPX 1-min, next expiry quotes, SPY quote and book |
 
 The workflow (`.github/workflows/collect.yml`) runs as two jobs because a hosted job may run at most 6 hours (hand-off at 12:45 ET).
-The Robinhood OAuth token is kept encrypted on the `runner-state` branch (`collector/state.py`); the key is the secret `RH_TOKEN_KEY`.
+The Robinhood OAuth token is never stored in this repo: it is kept encrypted in a separate private repo (`collector/state.py`), reached with the deploy key in the secret `STATE_DEPLOY_KEY`; the encryption key is the secret `RH_TOKEN_KEY`.
 Manual runs: Actions > collect > Run workflow (`day`, `capture`, `selftest`).
 
 Not investment advice. Data is as returned by Robinhood's undocumented API, with no guarantee of completeness.

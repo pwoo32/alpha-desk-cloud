@@ -21,6 +21,8 @@ concurrency:            # one Robinhood session at a time: the refresh token rot
   cancel-in-progress: false
 env:
   RH_TOKEN_KEY: ${{ secrets.RH_TOKEN_KEY }}
+  STATE_DEPLOY_KEY: ${{ secrets.STATE_DEPLOY_KEY }}   # write key to the private repo that holds the encrypted login
+  STATE_REPO: pwoo32/alpha-desk-state
   COLLECTOR_STATE: "1"
   PYTHONUNBUFFERED: "1"
 jobs:
